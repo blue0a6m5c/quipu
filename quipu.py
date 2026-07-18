@@ -14,7 +14,7 @@ from mastodon_client import (
 )
 from ollama_client import ask
 from text_utils import clean_post_text
-
+from logger import logger
 
 class QuipuListener(StreamListener):
     """
@@ -51,21 +51,20 @@ class QuipuListener(StreamListener):
         if not prompt:
             return
 
-        print("===== Mention =====")
-        print(f"User     : @{status.account.acct}")
-        print(f"Prompt   : {prompt}")
-        print("===================")
+        logger.info("===== Mention =====")
+        logger.info(f"User     : @{status.account.acct}")
+        logger.info(f"Prompt   : {prompt}")
+        logger.info("===================")
 
         # Ollamaへ問い合わせる
         reply = ask(prompt)
 
-        print("===== Reply =====")
-        print(reply)
+        logger.info("===== Reply =====")
+        logger.info(reply)
+        logger.info("=================")
 
         # AIの返答をMastodonへ返信する
         reply_to_status(status, reply)
-
-        print("=================")
 
 
 def main():
@@ -79,8 +78,8 @@ def main():
     # Bot自身のアカウント情報を取得
     me = get_my_account()
 
-    print("Quipu started.")
-    print("Waiting for mentions...")
+    logger.info("Quipu started.")
+    logger.info("Waiting for mentions...")
 
     # Streaming APIのイベント受信クラス
     listener = QuipuListener(me.id)
