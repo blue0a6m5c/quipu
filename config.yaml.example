@@ -1,0 +1,5 @@
+ollama:
+  url: "http://127.0.0.1:11434/api/chat"
+  model: "gemma3:12b"
+  connect_timeout: 3
+  read_timeout: 60
