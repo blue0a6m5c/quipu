@@ -15,11 +15,8 @@ mastodon = Mastodon(
 def verify_connection():
     """
     Mastodon APIへの接続確認を行う。
-
-    正常に認証できれば、自分のアカウント情報を表示する。
     """
 
-    # 自分自身のアカウント情報を取得
     me = mastodon.account_verify_credentials()
 
     print("Connected!")
@@ -31,10 +28,27 @@ def verify_connection():
 def get_client():
     """
     Mastodonクライアントを返す。
-
-    quipu.pyなど他のモジュールから利用するための関数。
     """
     return mastodon
+
+
+def get_my_account():
+    """
+    Bot自身のアカウント情報を取得する。
+    """
+    return mastodon.account_verify_credentials()
+
+
+def reply_to_status(status, text: str):
+    """
+    指定した投稿へ返信する。
+    """
+
+    mastodon.status_post(
+        status=text,
+        in_reply_to_id=status.id,
+        visibility=status.visibility,
+    )
 
 
 # このファイル単体で実行された場合だけ接続確認を行う
