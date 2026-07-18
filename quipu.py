@@ -16,6 +16,7 @@ from mastodon_client import (
 from ollama_client import ask
 from text_utils import clean_post_text
 from logger import logger
+from config import config
 
 class QuipuListener(StreamListener):
     """
@@ -40,6 +41,23 @@ class QuipuListener(StreamListener):
 
         # メンションされた投稿を取得
         status = notification.status
+
+        # リモートユーザーの場合は所属サーバーを取得する。
+        # ローカルユーザーの場合はサーバー名を取得できないため許可する。
+        server = None
+        if "@" in status.account.acct:
+            server = status.account.acct.split("@")[-1]
+
+        # 許可されていないサーバーからのメンションは無視する
+        if (
+            server is not None
+            and server not in config["mastodon"]["allowed_servers"]
+        ):
+            logger.info(
+                f"Ignored mention from unauthorized server: {server}"
+            )
+            return
+
 
         # Bot自身の投稿には返信しない（無限ループ防止）
         if status.account.id == self.my_account_id:

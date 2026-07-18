@@ -20,3 +20,7 @@ with CONFIG_FILE.open("r", encoding="utf-8") as f:
 
 with PERSONALITY_FILE.open("r", encoding="utf-8") as f:
     personality = f.read().strip()
+
+config["mastodon"]["allowed_servers"] = set(
+    config["mastodon"]["allowed_servers"]
+)

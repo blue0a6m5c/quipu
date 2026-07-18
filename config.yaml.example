@@ -1,6 +1,11 @@
 mastodon:
   base_url: "https://mastodon.example.com"
   access_token: "YOUR_ACCESS_TOKEN"
+  # メンションを受け付けるサーバー
+  allowed_servers:
+    - example.com
+    - example2.com
+
 
 ollama:
   url: "http://127.0.0.1:11434/api/chat"
