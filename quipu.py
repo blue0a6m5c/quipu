@@ -4,7 +4,8 @@ Quipu メインプログラム
 Streaming APIへ接続し、
 Bot宛てのメンションを受信してOllamaへ渡す。
 """
-
+import time
+import requests
 from mastodon import StreamListener
 
 from mastodon_client import (
@@ -56,15 +57,56 @@ class QuipuListener(StreamListener):
         logger.info(f"Prompt   : {prompt}")
         logger.info("===================")
 
-        # Ollamaへ問い合わせる
-        reply = ask(prompt)
+                # Ollamaへ問い合わせる処理時間を計測するため、開始時刻を記録する
+        start_time = time.perf_counter()
 
-        logger.info("===== Reply =====")
-        logger.info(reply)
-        logger.info("=================")
+        try:
+            # Ollamaへ問い合わせを開始する
+            logger.info("Sending prompt to Ollama...")
 
-        # AIの返答をMastodonへ返信する
-        reply_to_status(status, reply)
+            # Ollamaへプロンプトを送り、応答を取得する
+            reply = ask(prompt)
+
+            # Ollamaから応答が返るまでにかかった時間を計算する
+            elapsed = time.perf_counter() - start_time
+
+            logger.info(f"Ollama replied in {elapsed:.2f} sec")
+
+            logger.info("===== Reply =====")
+            logger.info(reply)
+            logger.info("===================")
+
+            # AIの返答をMastodonへ返信する
+            reply_to_status(status, reply)
+
+        except requests.exceptions.Timeout:
+            # Ollamaが一定時間応答しなかった場合
+            elapsed = time.perf_counter() - start_time
+
+            logger.warning(
+                f"Ollama timed out after {elapsed:.2f} sec"
+            )
+
+            reply_to_status(status, "zzz...")
+
+        except requests.exceptions.ConnectionError:
+            # Ollamaサーバーへ接続できなかった場合
+            elapsed = time.perf_counter() - start_time
+
+            logger.warning(
+                f"Could not connect to Ollama after {elapsed:.2f} sec"
+            )
+
+            reply_to_status(status, "……まだ寝ています。")
+
+        except Exception:
+            # 想定外のエラーが発生した場合
+            elapsed = time.perf_counter() - start_time
+
+            # スタックトレースを含めてログへ記録する
+            logger.exception(
+                f"Failed to process mention after {elapsed:.2f} sec"
+            )
 
 
 def main():
