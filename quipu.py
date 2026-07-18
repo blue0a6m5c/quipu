@@ -4,6 +4,9 @@ Quipu メインプログラム
 Streaming APIへ接続し、
 Bot宛てのメンションを受信してOllamaへ渡す。
 """
+# ユーザーごとの最後の応答時刻を保持する
+last_response_times = {}
+
 import time
 import requests
 from mastodon import StreamListener
@@ -42,6 +45,24 @@ class QuipuListener(StreamListener):
         # メンションされた投稿を取得
         status = notification.status
 
+        # 同一ユーザーからの連続したメンションを制限する
+        account_id = status.account.id
+        now = time.time()
+
+        interval = config["rate_limit"]["interval"]
+
+        last_time = last_response_times.get(account_id)
+
+        if (
+            last_time is not None
+            and now - last_time < interval
+        ):
+            logger.info(
+                f"Rate limit: @{status.account.acct}"
+            )
+            return
+
+
         # リモートユーザーの場合は所属サーバーを取得する。
         # ローカルユーザーの場合はサーバー名を取得できないため許可する。
         server = None
@@ -75,7 +96,7 @@ class QuipuListener(StreamListener):
         logger.info(f"Prompt   : {prompt}")
         logger.info("===================")
 
-                # Ollamaへ問い合わせる処理時間を計測するため、開始時刻を記録する
+        # Ollamaへ問い合わせる処理時間を計測するため、開始時刻を記録する
         start_time = time.perf_counter()
 
         try:
@@ -96,6 +117,7 @@ class QuipuListener(StreamListener):
 
             # AIの返答をMastodonへ返信する
             reply_to_status(status, reply)
+            last_response_times[account_id] = now
 
         except requests.exceptions.Timeout:
             # Ollamaが一定時間応答しなかった場合

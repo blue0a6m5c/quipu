@@ -12,3 +12,6 @@ ollama:
   model: "gemma3:12b"
   connect_timeout: 3
   read_timeout: 60
+
+rate_limit:
+  interval: 30
