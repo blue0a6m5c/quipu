@@ -1,9 +1,7 @@
 .venv/
 __pycache__/
 *.pyc
-
 logs/
 processed.json
-
 config.yaml
 personality.txt
